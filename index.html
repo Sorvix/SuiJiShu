@@ -221,6 +221,7 @@
  flex-direction: column;
  align-items: center;
  gap: 6px;
+ cursor: pointer;
  }
 
  .wechat-float img {
@@ -234,9 +235,12 @@
  background: #fff;
  }
 
- .wechat-float img:hover {
- transform: scale(1.08);
- box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+ /* 桌面端：hover 或点击即放大 */
+ @media (hover: hover) {
+ .wechat-float:hover img {
+ transform: scale(1.6);
+ box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+ }
  }
 
  .wechat-float .wechat-label {
@@ -244,9 +248,15 @@
  color: #9ca3af;
  text-align: center;
  line-height: 1.2;
+ cursor: pointer;
+ transition: color 0.2s;
  }
 
- /* 移动端：二维码更小，避免遮挡内容 */
+ .wechat-float:hover .wechat-label {
+ color: #6b7280;
+ }
+
+ /* 移动端：二维码更小，点击后弹窗放大 */
  @media (max-width: 480px) {
  .wechat-float {
  bottom: 12px;
@@ -259,7 +269,7 @@
  border-radius: 6px;
  }
  .wechat-float .wechat-label {
- font-size: 0.65rem;
+ font-size: 0.68rem;
  }
  }
 
@@ -268,6 +278,35 @@
  width: 40px;
  height: 40px;
  }
+ }
+
+ /* ========== 微信二维码弹窗（大图预览） ========== */
+ .wechat-modal {
+ display: none;
+ position: fixed;
+ inset: 0;
+ z-index: 99999;
+ background: rgba(0,0,0,0.6);
+ justify-content: center;
+ align-items: center;
+ backdrop-filter: blur(4px);
+ }
+
+ .wechat-modal.show {
+ display: flex;
+ }
+
+ .wechat-modal img {
+ max-width: 85vw;
+ max-height: 85vh;
+ border-radius: 12px;
+ box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+ animation: wechat-pop 0.2s ease;
+ }
+
+ @keyframes wechat-pop {
+ from { transform: scale(0.85); opacity: 0.6; }
+ to   { transform: scale(1);    opacity: 1;   }
  }
  </style>
 </head>
@@ -334,9 +373,14 @@
 <div id="toast" class="toast">提示信息</div>
 
 <!-- 微信二维码悬浮卡片 -->
-<div class="wechat-float">
- <img src="wechat-qr.jpg" alt="微信二维码" title="扫码添加微信" />
- <span class="wechat-label">联系作者</span>
+<div class="wechat-float" id="wechatFloat">
+ <img src="wechat-qr.jpg" alt="微信二维码" id="wechatQrImg" />
+ <span class="wechat-label" id="wechatLabel">可添加作者为好友</span>
+</div>
+
+<!-- 微信二维码弹窗（大图） -->
+<div class="wechat-modal" id="wechatModal" onclick="closeWechatModal()">
+ <img src="wechat-qr.jpg" alt="微信二维码大图" />
 </div>
 
 <script>
@@ -518,6 +562,24 @@
  document.getElementById('sortBtn').textContent = window.__currentSortAsc ? "🔼 升序" : "🔽 降序";
  showToast(window.__currentSortAsc ? "已按升序排列" : "已按降序排列");
  }
+
+ /* ======= 微信二维码弹窗（手机点击触发） ======= */
+ var isMobile = window.matchMedia("(max-width: 480px)").matches
+ && window.matchMedia("(hover: none)").matches;
+
+ if (isMobile) {
+ document.getElementById('wechatFloat').addEventListener('click', function(e) {
+ document.getElementById('wechatModal').classList.add('show');
+ });
+ }
+
+ function closeWechatModal() {
+ document.getElementById('wechatModal').classList.remove('show');
+ }
+ document.addEventListener('keydown', function(e) {
+ if (e.key === 'Escape') closeWechatModal();
+ });
+
 </script>
 
 </body>
