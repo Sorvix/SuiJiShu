@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sorvix.github.io/SuiJiShu/sitemap.xml
