@@ -210,6 +210,65 @@
  margin: -5px 0;
  }
  }
+
+ /* ========== 微信二维码悬浮卡片 ========== */
+ .wechat-float {
+ position: fixed;
+ bottom: 20px;
+ right: 20px;
+ z-index: 9999;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ gap: 6px;
+ }
+
+ .wechat-float img {
+ width: 64px;
+ height: 64px;
+ border-radius: 8px;
+ box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+ cursor: pointer;
+ transition: transform 0.2s, box-shadow 0.2s;
+ object-fit: cover;
+ background: #fff;
+ }
+
+ .wechat-float img:hover {
+ transform: scale(1.08);
+ box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+ }
+
+ .wechat-float .wechat-label {
+ font-size: 0.72rem;
+ color: #9ca3af;
+ text-align: center;
+ line-height: 1.2;
+ }
+
+ /* 移动端：二维码更小，避免遮挡内容 */
+ @media (max-width: 480px) {
+ .wechat-float {
+ bottom: 12px;
+ right: 12px;
+ gap: 4px;
+ }
+ .wechat-float img {
+ width: 48px;
+ height: 48px;
+ border-radius: 6px;
+ }
+ .wechat-float .wechat-label {
+ font-size: 0.65rem;
+ }
+ }
+
+ @media (max-height: 500px) and (max-width: 480px) {
+ .wechat-float img {
+ width: 40px;
+ height: 40px;
+ }
+ }
  </style>
 </head>
 <body>
@@ -273,6 +332,12 @@
 
 <!-- 提示框 -->
 <div id="toast" class="toast">提示信息</div>
+
+<!-- 微信二维码悬浮卡片 -->
+<div class="wechat-float">
+ <img src="wechat-qr.jpg" alt="微信二维码" title="扫码添加微信" />
+ <span class="wechat-label">联系作者</span>
+</div>
 
 <script>
  // 配置常量
