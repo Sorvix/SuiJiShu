@@ -199,7 +199,12 @@
  /* 移动端适配微调 */
  @media (max-width: 480px) {
  .container {
- padding: 1.5rem;
+ padding: 1.2rem 1.5rem 1.5rem;
+ padding-top: 0.8rem;
+ }
+ h1 {
+ font-size: 1.35rem;
+ margin-bottom: 1.2rem;
  }
  .input-row {
  flex-direction: column;
@@ -235,11 +240,16 @@
  background: #fff;
  }
 
- /* 桌面端：hover 或点击即放大 */
+ /* 桌面端：hover 预览，点击彻底放大 */
  @media (hover: hover) {
  .wechat-float:hover img {
  transform: scale(1.6);
  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+ }
+ .wechat-float.clicked img,
+ .wechat-float.clicked:hover img {
+ transform: scale(2.4) !important;
+ box-shadow: 0 12px 40px rgba(0,0,0,0.35) !important;
  }
  }
 
@@ -563,13 +573,25 @@
  showToast(window.__currentSortAsc ? "已按升序排列" : "已按降序排列");
  }
 
- /* ======= 微信二维码弹窗（手机点击触发） ======= */
+ /* ======= 微信二维码点击触发（桌面+手机） ======= */
  var isMobile = window.matchMedia("(max-width: 480px)").matches
  && window.matchMedia("(hover: none)").matches;
 
  if (isMobile) {
+ // 手机端：点击弹窗
  document.getElementById('wechatFloat').addEventListener('click', function(e) {
  document.getElementById('wechatModal').classList.add('show');
+ });
+ } else {
+ // 桌面端：点击切换 2.4x 放大/恢复
+ var wechatClicked = false;
+ document.getElementById('wechatFloat').addEventListener('click', function(e) {
+ wechatClicked = !wechatClicked;
+ if (wechatClicked) {
+ document.getElementById('wechatFloat').classList.add('clicked');
+ } else {
+ document.getElementById('wechatFloat').classList.remove('clicked');
+ }
  });
  }
 
