@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>高级随机数生成器</title>
+ <style>
+ :root {
+ --primary-color: #4f46e5; /* 靛蓝色 */
+ --primary-hover: #4338ca;
+ --bg-color: #f3f4f6;
+ --card-bg: #ffffff;
+ --text-color: #1f2937;
+ --border-radius: 12px;
+ --error-color: #ef4444;
+ }
+
+ body {
+ font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+ background-color: var(--bg-color);
+ color: var(--text-color);
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ min-height: 100vh;
+ margin: 0;
+ padding: 20px;
+ box-sizing: border-box;
+ }
+
+ .container {
+ background-color: var(--card-bg);
+ padding: 2rem;
+ border-radius: var(--border-radius);
+ box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+ width: 100%;
+ max-width: 500px;
+ }
+
+ h1 {
+ text-align: center;
+ margin-bottom: 1.5rem;
+ font-size: 1.5rem;
+ color: #111827;
+ }
+
+ .form-group {
+ margin-bottom: 1rem;
+ }
+
+ label {
+ display: block;
+ margin-bottom: 0.5rem;
+ font-weight: 600;
+ font-size: 0.9rem;
+ }
+
+ .input-row {
+ display: flex;
+ gap: 10px;
+ align-items: center;
+ }
+
+ input[type="number"], select {
+ width: 100%;
+ padding: 0.75rem;
+ border: 1px solid #d1d5db;
+ border-radius: 8px;
+ font-size: 1rem;
+ transition: border-color 0.2s;
+ box-sizing: border-box; /* 关键：防止padding撑大宽度 */
+ }
+
+ input:focus, select:focus {
+ outline: none;
+ border-color: var(--primary-color);
+ box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+ }
+
+ .btn-group {
+ display: flex;
+ gap: 10px;
+ margin-top: 1.5rem;
+ }
+
+ button {
+ flex: 1;
+ padding: 0.75rem;
+ border: none;
+ border-radius: 8px;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.2s;
+ font-size: 1rem;
+ }
+
+ .btn-primary {
+ background-color: var(--primary-color);
+ color: white;
+ }
+
+ .btn-primary:hover {
+ background-color: var(--primary-hover);
+ transform: translateY(-1px);
+ }
+
+ .btn-secondary {
+ background-color: #e5e7eb;
+ color: #374151;
+ }
+
+ .btn-secondary:hover {
+ background-color: #d1d5db;
+ }
+
+ .result-area {
+ margin-top: 1.5rem;
+ padding: 1rem;
+ background-color: #f9fafb;
+ border: 1px dashed #d1d5db;
+ border-radius: 8px;
+ min-height: 100px;
+ max-height: 300px;
+ overflow-y: auto;
+ word-break: break-all;
+ line-height: 1.6;
+ font-family: monospace;
+ font-size: 1.1rem;
+ color: #374151;
+ }
+
+ .toast {
+ visibility: hidden;
+ min-width: 250px;
+ background-color: #333;
+ color: #fff;
+ text-align: center;
+ border-radius: 8px;
+ padding: 12px;
+ position: fixed;
+ z-index: 1;
+ left: 50%;
+ bottom: 30px;
+ transform: translateX(-50%);
+ font-size: 0.9rem;
+ opacity: 0;
+ transition: opacity 0.3s, bottom 0.3s;
+ }
+
+ .toast.show {
+ visibility: visible;
+ opacity: 1;
+ bottom: 50px;
+ }
+
+ .toast.error {
+ background-color: var(--error-color);
+ }
+
+ /* 移动端适配微调 */
+ @media (max-width: 480px) {
+ .container {
+ padding: 1.5rem;
+ }
+ .input-row {
+ flex-direction: column;
+ align-items: stretch;
+ }
+ .range-separator {
+ text-align: center;
+ margin: -5px 0;
+ }
+ }
+ </style>
+</head>
+<body>
+
+<div class="container">
+ <h1>🎲 随机数生成器</h1>
+
+ <!-- 个数设置 -->
+ <div class="form-group">
+ <label for="count">生成个数 (Max: 2000)</label>
+ <input type="number" id="count" value="10" min="1" max="2000" placeholder="例如：10">
+ </div>
+
+ <!-- 范围设置 -->
+ <div class="form-group">
+ <label>数值范围</label>
+ <div class="input-row">
+ <input type="number" id="min" value="1" placeholder="最小值">
+ <span class="range-separator">~</span>
+ <input type="number" id="max" value="100" placeholder="最大值">
+ </div>
+ </div>
+
+ <!-- 高级选项 -->
+ <div class="form-group">
+ <div class="input-row">
+ <div style="flex: 1;">
+ <label for="decimals">小数位数</label>
+ <select id="decimals">
+ <option value="0">整数 (0位)</option>
+ <option value="1">1位小数</option>
+ <option value="2">2位小数</option>
+ <option value="3">3位小数</option>
+ </select>
+ </div>
+ <div style="flex: 1;">
+ <label for="unique">是否唯一</label>
+ <select id="unique">
+ <option value="false">可重复</option>
+ <option value="true">不可重复</option>
+ </select>
+ </div>
+ </div>
+ </div>
+
+ <!-- 按钮组 -->
+ <div class="btn-group">
+ <button class="btn-secondary" onclick="resetForm()">重置</button>
+ <button class="btn-primary" onclick="generateRandom()">点击生成</button>
+ </div>
+
+ <!-- 结果展示 -->
+ <div class="result-area" id="result">结果将显示在这里...</div>
+</div>
+
+<!-- 提示框 -->
+<div id="toast" class="toast">提示信息</div>
+
+<script>
+ // 配置常量
+ const MAX_LIMIT = 2000;
+
+ function showToast(message, isError = false) {
+ const toast = document.getElementById("toast");
+ toast.textContent = message;
+ toast.className = "toast show" + (isError ? " error" : "");
+ setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+ }
+
+ function resetForm() {
+ document.getElementById('count').value = 10;
+ document.getElementById('min').value = 1;
+ document.getElementById('max').value = 100;
+ document.getElementById('decimals').value = 0;
+ document.getElementById('unique').value = "false";
+ document.getElementById('result').textContent = "结果将显示在这里...";
+ }
+
+ function generateRandom() {
+ // 1. 获取输入值
+ let count = parseInt(document.getElementById('count').value);
+ let min = parseFloat(document.getElementById('min').value);
+ let max = parseFloat(document.getElementById('max').value);
+ let decimals = parseInt(document.getElementById('decimals').value);
+ let isUnique = document.getElementById('unique').value === "true";
+
+ // 2. 基础校验
+ if (isNaN(count) || isNaN(min) || isNaN(max)) {
+ showToast("请输入有效的数字！", true);
+ return;
+ }
+
+ // 3. 数量限制检查 (核心优化点)
+ if (count > MAX_LIMIT) {
+ showToast(`为保证流畅，单次最多生成 ${MAX_LIMIT} 个`, true);
+ // 自动修正输入框的值，提升体验
+ document.getElementById('count').value = MAX_LIMIT;
+ return;
+ }
+
+ if (count <= 0) {
+ showToast("生成个数必须大于0", true);
+ return;
+ }
+
+ // 4. 范围逻辑处理 (自动交换大小值)
+ if (min > max) {
+ [min, max] = [max, min]; // ES6 交换变量
+ document.getElementById('min').value = min;
+ document.getElementById('max').value = max;
+ }
+
+ // 5. 唯一性逻辑的边界检查
+ if (isUnique) {
+ // 计算范围内有多少个可能的数字
+ // 如果是整数，数量是 max - min + 1
+ // 如果有小数，理论上是无限的，但为了安全，我们设定一个基于精度的检查
+ let possibleCount = 0;
+ if (decimals === 0) {
+ possibleCount = Math.floor(max) - Math.ceil(min) + 1;
+ } else {
+ // 简单估算：范围 * 10的n次方
+ possibleCount = (max - min) * Math.pow(10, decimals);
+ }
+
+ if (count > possibleCount) {
+ showToast(`范围太小，无法生成 ${count} 个不重复的数！`, true);
+ return;
+ }
+ }
+
+ // 6. 生成逻辑
+ let results = new Set(); // 使用 Set 自动去重
+ let safetyCounter = 0; // 防止极端情况死循环
+ const SAFETY_LIMIT = 100000;
+
+ while (results.size < count) {
+ if (safetyCounter++ > SAFETY_LIMIT) {
+ showToast("生成超时，请尝试缩小范围或允许重复", true);
+ return;
+ }
+
+ // 生成随机数
+ let randomNum = Math.random() * (max - min) + min;
+
+ // 处理精度
+ if (decimals > 0) {
+ randomNum = parseFloat(randomNum.toFixed(decimals));
+ } else {
+ randomNum = Math.floor(randomNum);
+ }
+
+ // 再次确保不超出范围 (由于 toFixed 可能会进位导致超出 max)
+ if (randomNum > max) randomNum = max;
+ if (randomNum < min) randomNum = min;
+
+ if (isUnique) {
+ results.add(randomNum);
+ } else {
+ results.add(randomNum + "_" + safetyCounter); // 临时加后缀避免Set去重，最后去掉
+ }
+ }
+
+ // 7. 格式化输出
+ let finalArray = Array.from(results);
+ if (!isUnique) {
+ // 如果不是唯一的，去掉刚才加的后缀
+ finalArray = finalArray.map(item => item.split('_')[0]);
+ }
+
+ // 排序 (可选，数字排序)
+ finalArray.sort((a, b) => parseFloat(a) - parseFloat(b));
+
+ // 渲染结果
+ document.getElementById('result').textContent = finalArray.join(', ');
+ showToast("生成成功！");
+ }
+</script>
+
+</body>
+</html>
