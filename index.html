@@ -129,6 +129,45 @@
  color: #374151;
  }
 
+ .result-toolbar {
+ display: none; /* 默认隐藏，有结果时显示 */
+ gap: 8px;
+ margin-top: 1rem;
+ }
+
+ .result-toolbar.show {
+ display: flex;
+ }
+
+ .result-toolbar button {
+ padding: 0.5rem 0.9rem;
+ font-size: 0.85rem;
+ border-radius: 6px;
+ background-color: var(--primary-color);
+ color: white;
+ border: none;
+ cursor: pointer;
+ transition: all 0.2s;
+ display: inline-flex;
+ align-items: center;
+ gap: 4px;
+ }
+
+ .result-toolbar button:hover {
+ background-color: var(--primary-hover);
+ transform: translateY(-1px);
+ }
+
+ .result-toolbar button.btn-ghost {
+ background-color: transparent;
+ color: var(--primary-color);
+ border: 1px solid var(--primary-color);
+ }
+
+ .result-toolbar button.btn-ghost:hover {
+ background-color: rgba(79, 70, 229, 0.08);
+ }
+
  .toast {
  visibility: hidden;
  min-width: 250px;
@@ -224,6 +263,12 @@
 
  <!-- 结果展示 -->
  <div class="result-area" id="result">结果将显示在这里...</div>
+
+ <!-- 结果操作工具栏：有结果时才显示 -->
+ <div class="result-toolbar" id="resultToolbar">
+ <button id="copyBtn" onclick="copyResult()">📋 复制结果</button>
+ <button id="sortBtn" class="btn-ghost" onclick="toggleSort()">🔼 升序</button>
+ </div>
 </div>
 
 <!-- 提示框 -->
@@ -247,6 +292,9 @@
  document.getElementById('decimals').value = 0;
  document.getElementById('unique').value = "false";
  document.getElementById('result').textContent = "结果将显示在这里...";
+ document.getElementById('resultToolbar').classList.remove('show');
+ window.__currentResults = null;
+ window.__currentResultText = '';
  }
 
  function generateRandom() {
@@ -345,8 +393,65 @@
  finalArray.sort((a, b) => parseFloat(a) - parseFloat(b));
 
  // 渲染结果
- document.getElementById('result').textContent = finalArray.join(', ');
+ let resultText = finalArray.join(', ');
+ document.getElementById('result').textContent = resultText;
+ // 保存当前结果到全局状态，供复制/排序使用
+ window.__currentResults = finalArray.slice();
+ window.__currentSortAsc = true; // 默认升序
+ window.__currentResultText = resultText;
+ // 更新排序按钮文字
+ document.getElementById('sortBtn').textContent = window.__currentSortAsc ? "🔼 升序" : "🔽 降序";
+ // 显示工具栏
+ document.getElementById('resultToolbar').classList.add('show');
  showToast("生成成功！");
+ }
+
+ // 复制结果到剪贴板
+ async function copyResult() {
+ const text = window.__currentResultText;
+ if (!text) {
+ showToast("暂无结果可复制", true);
+ return;
+ }
+ try {
+ await navigator.clipboard.writeText(text);
+ showToast("已复制到剪贴板！");
+ } catch (err) {
+ // 降级方案
+ const ta = document.createElement('textarea');
+ ta.value = text;
+ ta.style.position = 'fixed';
+ ta.style.opacity = '0';
+ document.body.appendChild(ta);
+ ta.select();
+ try {
+ document.execCommand('copy');
+ showToast("已复制到剪贴板！");
+ } catch (e) {
+ showToast("复制失败，请手动选中复制", true);
+ }
+ document.body.removeChild(ta);
+ }
+ }
+
+ // 切换排序（升/降序）
+ function toggleSort() {
+ const arr = window.__currentResults;
+ if (!arr || arr.length === 0) {
+ showToast("暂无结果可排序", true);
+ return;
+ }
+ window.__currentSortAsc = !window.__currentSortAsc;
+ arr.sort((a, b) => {
+ const va = parseFloat(a);
+ const vb = parseFloat(b);
+ return window.__currentSortAsc ? va - vb : vb - va;
+ });
+ const text = arr.join(', ');
+ document.getElementById('result').textContent = text;
+ window.__currentResultText = text;
+ document.getElementById('sortBtn').textContent = window.__currentSortAsc ? "🔼 升序" : "🔽 降序";
+ showToast(window.__currentSortAsc ? "已按升序排列" : "已按降序排列");
  }
 </script>
 
